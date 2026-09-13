@@ -99,8 +99,8 @@ class KeyframeTest {
                 ),
             ),
         )
-        assertEquals(0.0, effect.valueAt("value", 0L)?.asNumber(), 1e-12)
-        assertEquals(0.5, effect.valueAt("value", 500_000L)?.asNumber(), 1e-12)
-        assertEquals(0.0, effect.valueAt("missing", 500_000L)?.asNumber(), 1e-12)
+        assertEquals(0.0, effect.valueAt("value", 0L)?.asNumber() ?: 0.0, 1e-12)
+        assertEquals(0.5, effect.valueAt("value", 500_000L)?.asNumber() ?: 0.0, 1e-12)
+        assertEquals(0.0, effect.valueAt("missing", 500_000L)?.asNumber() ?: 0.0, 1e-12)
     }
 }

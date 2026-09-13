@@ -45,7 +45,7 @@ class RenderResolverTest {
         )
 
     private fun sequence(vararg tracks: Track) =
-        Sequence(width = 1920, height = 1080, frameRate = p30, tracks = tracks.asList())
+        Sequence(width = 1920, height = 1080, frameRate = p30.framesPerSecond, tracks = tracks.asList())
 
     @Test
     fun `resolves a single clip into one frame with timecode`() {
