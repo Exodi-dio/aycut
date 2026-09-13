@@ -18,7 +18,7 @@ class ProjectFormatException(message: String, cause: Throwable? = null) :
  */
 object ProjectCodec {
 
-    const val CURRENT_VERSION = 1
+    const val CURRENT_VERSION = 2
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -36,7 +36,10 @@ object ProjectCodec {
         throw ProjectFormatException("malformed project snapshot", e)
     }
 
-    /** Decode and fully validate a snapshot into an editable [Sequence]. */
+    /**
+     * Decode and fully validate a snapshot into an editable [Sequence].
+     * Snapshots older than current are upgraded via [Migration].
+     */
     fun decodeToSequence(jsonText: String): Sequence {
         val snapshot = decodeSnapshot(jsonText)
         if (snapshot.version > CURRENT_VERSION) {
@@ -44,8 +47,9 @@ object ProjectCodec {
                 "snapshot version ${snapshot.version} is newer than supported $CURRENT_VERSION",
             )
         }
+        val current = Migration.upgradeToCurrent(snapshot)
         return try {
-            snapshot.toSequence()
+            current.toSequence()
         } catch (e: RuntimeException) {
             // Structural validation rejects via require (IAE) and check (ISE).
             throw ProjectFormatException("structurally invalid snapshot", e)

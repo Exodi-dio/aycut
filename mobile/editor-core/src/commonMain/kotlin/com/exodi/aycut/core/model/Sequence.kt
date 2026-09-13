@@ -21,6 +21,8 @@ data class Sequence(
     val frameRate: Double,
     val tracks: List<Track> = emptyList(),
     val masterGain: Double = 1.0,
+    val playhead: Micros = 0L,
+    val markers: List<Marker> = emptyList(),
 ) {
     init {
         require(width > 0) { "width must be positive" }
@@ -31,6 +33,10 @@ data class Sequence(
         }
         require(tracks.map { it.id }.distinct().size == tracks.size) {
             "duplicate track ids"
+        }
+        require(playhead >= 0L) { "playhead must be non-negative" }
+        require(markers.zipWithNext().all { it.first.at <= it.second.at }) {
+            "markers must be sorted by time"
         }
     }
 
@@ -70,6 +76,8 @@ data class Sequence(
             frameRate: Double = 30.0,
             tracks: List<Track> = emptyList(),
             masterGain: Double = 1.0,
-        ): Sequence = Sequence(width, height, frameRate, tracks, masterGain)
+            playhead: Micros = 0L,
+            markers: List<Marker> = emptyList(),
+        ): Sequence = Sequence(width, height, frameRate, tracks, masterGain, playhead, markers)
     }
 }

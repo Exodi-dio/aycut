@@ -44,7 +44,7 @@ class ProjectCodecTest {
         assertEquals(1920, snapshot.width)
         assertEquals(1080, snapshot.height)
         assertEquals(30.0, snapshot.frameRate)
-        assertEquals(1, snapshot.version)
+        assertEquals(ProjectCodec.CURRENT_VERSION, snapshot.version)
     }
 
     @Test
@@ -87,7 +87,7 @@ class ProjectCodecTest {
 
     @Test
     fun `newer version is rejected`() {
-        val json = """{"version":2,"name":"A","width":100,"height":100,"frameRate":30.0,"tracks":[]}"""
+        val json = """{"version":3,"name":"A","width":100,"height":100,"frameRate":30.0,"tracks":[]}"""
         assertFailsWith<ProjectFormatException> { ProjectCodec.decodeToSequence(json) }
     }
 

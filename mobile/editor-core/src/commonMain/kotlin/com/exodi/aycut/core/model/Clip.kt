@@ -43,6 +43,8 @@ data class Clip(
     val audioEnvelope: AudioEnvelope? = null,
     val effects: List<Effect> = emptyList(),
     val transitionIn: ClipTransition? = null,
+    val groupId: LinkGroupId? = null,
+    val speedRamp: SpeedRamp? = null,
 ) {
     init {
         require(playRate.isFinite() && playRate > 0.0) {
@@ -53,6 +55,9 @@ data class Clip(
         }
         require(fadeIn >= 0L) { "fadeIn must be non-negative, was $fadeIn" }
         require(fadeOut >= 0L) { "fadeOut must be non-negative, was $fadeOut" }
+        require(speedRamp == null || playRate == 1.0) {
+            "a speed ramp cannot be combined with a constant playRate; set playRate to 1.0"
+        }
     }
 
     /** The first applied effect with [effectId], or null. */

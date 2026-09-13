@@ -14,6 +14,8 @@ import com.exodi.aycut.core.model.Sequence
  */
 class SequenceEditor(
     initial: Sequence = Sequence.createEmpty(),
+    /** Bounded undo: older commands are dropped once the stack exceeds this. */
+    val undoLimit: Int = DEFAULT_UNDO_LIMIT,
 ) {
     var sequence: Sequence = initial
         private set
@@ -24,12 +26,21 @@ class SequenceEditor(
     private val undoStack = ArrayDeque<EditCommand>()
     private val redoStack = ArrayDeque<EditCommand>()
 
+    init {
+        require(undoLimit >= 1) { "undoLimit must be at least 1, was $undoLimit" }
+    }
+
     fun perform(command: EditCommand) {
         sequence = command.apply(sequence)
         undoStack.addLast(command)
+        while (undoStack.size > undoLimit) undoStack.removeFirst()
         redoStack.clear()
         clampPlayhead()
     }
+
+    val canUndo: Boolean get() = undoStack.isNotEmpty()
+    val canRedo: Boolean get() = redoStack.isNotEmpty()
+    val undoDepth: Int get() = undoStack.size
 
     fun undo(): Boolean {
         val command = undoStack.removeLastOrNull() ?: return false
@@ -53,5 +64,9 @@ class SequenceEditor(
 
     private fun clampPlayhead() {
         playhead = playhead.coerceIn(0L, sequence.durationMicros)
+    }
+
+    companion object {
+        const val DEFAULT_UNDO_LIMIT = 100
     }
 }
