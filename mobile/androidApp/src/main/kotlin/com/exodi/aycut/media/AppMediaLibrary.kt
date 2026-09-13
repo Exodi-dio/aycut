@@ -1,6 +1,6 @@
 package com.exodi.aycut.media
 
-import android.content.ContentResolver
+import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -16,7 +16,7 @@ import java.util.UUID
  * producing thumbnail frames. All Android-breaking APIs are confined here.
  */
 class AppMediaLibrary(
-    private val resolver: ContentResolver,
+    context: Context
     private val mediaDir: File,
     @Volatile private var mode: RetrieverMode = RetrieverMode.FILE,
 ) {
@@ -29,11 +29,11 @@ class AppMediaLibrary(
         // Source filename first (for display + a stable-ish local name).
         val sourceName = queryDisplayName(uri) ?: "import-${System.currentTimeMillis()}"
         val id = MediaId(UUID.randomUUID().toString())
-        val file = File(mediaDir, "${id.value}.${extensionOf(sourceName)}")
+        val file = File(mediaDir, "${id.raw}.${extensionOf(sourceName)}")
 
         // SAF gives a streaming read; copy the bytes so decode/thumbnail
         // never depends on the picker's URI outliving the session.
-        resolver.openInputStream(uri).use { input ->
+        context.contentResolver.openInputStream(uri).use { input ->
             checkNotNull(input) { "cannot open $uri" }
             file.outputStream().use { output -> input.copyTo(output) }
         }
@@ -42,12 +42,12 @@ class AppMediaLibrary(
         try {
             when (mode) {
                 RetrieverMode.FILE -> retriever.setDataSource(file.absolutePath)
-                RetrieverMode.URI -> retriever.setDataSource(resolver, uri)
+                RetrieverMode.URI -> retriever.setDataSource(context, uri)
             }
             return MediaAsset(
                 id = id,
                 displayName = sourceName,
-                mimeType = resolver.getType(uri),
+                mimeType = context.contentResolver.getType(uri),
                 durationMicros = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_DURATION),
                 width = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH).toInt(),
                 height = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT).toInt(),
@@ -67,7 +67,7 @@ class AppMediaLibrary(
                     val file = File(mediaDir, fileFor(asset))
                     retriever.setDataSource(file.absolutePath)
                 }
-                RetrieverMode.URI -> retriever.setDataSource(resolver, assetUri(asset))
+                RetrieverMode.URI -> retriever.setDataSource(context, assetUri(asset))
             }
             retriever.getFrameAtTime(atMicros, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
         } finally {
@@ -79,7 +79,7 @@ class AppMediaLibrary(
         extractMetadata(key)?.toLongOrNull() ?: 0L
 
     private fun queryDisplayName(uri: Uri): String? {
-        resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null).use { cursor ->
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null).use { cursor ->
             if (cursor != null && cursor.moveToFirst()) {
                 val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (idx >= 0) {
@@ -93,7 +93,7 @@ class AppMediaLibrary(
 
     /** Stored file name for an asset (matches [importFromUri] storage). */
     internal fun fileFor(asset: MediaAsset): String =
-        "${asset.id.value}.${extensionOf(asset.displayName)}"
+        "${asset.id.raw}.${extensionOf(asset.displayName)}"
 
     private fun assetUri(asset: MediaAsset): Uri =
         Uri.fromFile(File(mediaDir, fileFor(asset)))
