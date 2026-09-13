@@ -64,12 +64,14 @@ class RenderLayoutTest {
     }
 
     @Test
-    fun `fill crops the wider axis`() {
+    fun `fill crops the taller source vertically`() {
         val window = RenderLayout.fillUvWindow(4f / 3f, 16f / 9f)
-        assertEquals(0.75f, window.width, 1e-4f)
-        assertEquals(1f, window.height, 1e-4f)
-        assertEquals(0.125f, window.left, 1e-4f)
-        assertEquals(0.875f, window.right, 1e-4f)
+        assertEquals(1f, window.width, 1e-4f)
+        assertEquals(0.75f, window.height, 1e-4f)
+        assertEquals(0f, window.left, 1e-4f)
+        assertEquals(1f, window.right, 1e-4f)
+        assertEquals(0.125f, window.top, 1e-4f)
+        assertEquals(0.875f, window.bottom, 1e-4f)
     }
 
     @Test
