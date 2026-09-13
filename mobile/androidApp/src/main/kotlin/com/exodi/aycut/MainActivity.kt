@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.exodi.aycut.ui.theme.AycutTheme
-import com.exodi.aycut.core.Sequence
+import com.exodi.aycut.core.model.Sequence
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
