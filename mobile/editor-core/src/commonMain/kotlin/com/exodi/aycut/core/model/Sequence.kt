@@ -1,17 +1,24 @@
 package com.exodi.aycut.core.model
 
+import com.exodi.aycut.core.math.FrameRate
+import com.exodi.aycut.core.math.FrameRounding
+import com.exodi.aycut.core.math.Frames
+import kotlin.math.abs
+
 /**
  * A video editing sequence: canvas size, frame rate, and a set of tracks.
  *
- * All timeline timing is integer microseconds (see [Micros]); [frameRate] is
- * informational for now — time mapping is never rounded to frames until
- * explicitly requested.
+ * All timeline timing is integer microseconds (see [Micros]). [frameRate] is
+ * the approximate decimal; [timebase] is the exact rational the engine counts
+ * frames on. Time mapping never rounds to frames unless explicitly requested
+ * (e.g. [frameAt]).
  */
 data class Sequence(
     val width: Int,
     val height: Int,
     val frameRate: Double,
     val tracks: List<Track>,
+    val timebase: FrameRate = FrameRate.of(frameRate),
 ) {
     init {
         require(width > 0) { "width must be positive" }
@@ -20,11 +27,22 @@ data class Sequence(
         require(tracks.map { it.id }.distinct().size == tracks.size) {
             "duplicate track ids"
         }
+        require(abs(timebase.framesPerSecond - frameRate) <= maxOf(frameRate * 1e-3, 1e-6)) {
+            "timebase $timebase conflicts with frameRate $frameRate"
+        }
     }
 
     /** Length of the sequence: the farthest point any clip reaches. */
     val durationMicros: Micros
         get() = tracks.maxOfOrNull { it.duration } ?: 0L
+
+    /** Whole (export) frame index whose span contains [micros]. */
+    fun frameAt(micros: Micros): Long =
+        Frames.frameIndexAt(micros, timebase, FrameRounding.FLOOR)
+
+    /** Number of whole frames covering the sequence length. */
+    val frameCount: Long
+        get() = Frames.framesForMicros(durationMicros, timebase)
 
     fun track(trackId: TrackId): Track? = tracks.firstOrNull { it.id == trackId }
 

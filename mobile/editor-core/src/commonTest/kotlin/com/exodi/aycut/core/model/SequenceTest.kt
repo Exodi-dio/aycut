@@ -1,7 +1,9 @@
 package com.exodi.aycut.core.model
 
+import com.exodi.aycut.core.math.FrameRate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class SequenceTest {
@@ -13,6 +15,34 @@ class SequenceTest {
         assertEquals(1080, sequence.height)
         assertEquals(30.0, sequence.frameRate)
         assertEquals(0L, sequence.durationMicros)
+    }
+
+    @Test
+    fun `timebase derives from the decimal frame rate by default`() {
+        assertEquals(FrameRate.P30, Sequence.createEmpty().timebase)
+        assertEquals(FrameRate.NTSC_30, Sequence(1920, 1080, 29.97).timebase)
+        assertEquals(FrameRate.P25, Sequence(1920, 1080, 25.0).timebase)
+    }
+
+    @Test
+    fun `explicit timebase conflicting with frame rate is rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            Sequence(1920, 1080, 30.0, emptyList(), timebase = FrameRate.P25)
+        }
+    }
+
+    @Test
+    fun `frame helpers use the exact timebase grid`() {
+        val sequence = Sequence.createEmpty(
+            tracks = listOf(
+                Track.empty(TrackId("v1")).plusClip(
+                    Clip(ClipId("c1"), MediaId("a.mp4"), TimeRange(0L, 1_000_000L), 0L),
+                ),
+            ),
+        )
+        assertEquals(0L, sequence.frameAt(0L))
+        assertEquals(15L, sequence.frameAt(500_000L))
+        assertEquals(31L, sequence.frameCount)
     }
 
     @Test
