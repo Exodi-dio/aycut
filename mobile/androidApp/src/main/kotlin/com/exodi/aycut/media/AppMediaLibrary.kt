@@ -16,7 +16,7 @@ import java.util.UUID
  * producing thumbnail frames. All Android-breaking APIs are confined here.
  */
 class AppMediaLibrary(
-    context: Context
+    context: Context,
     private val mediaDir: File,
     @Volatile private var mode: RetrieverMode = RetrieverMode.FILE,
 ) {
