@@ -74,11 +74,24 @@ class ClipCommandsTest {
     }
 
     @Test
-    fun `extending trims beyond the source is rejected`() {
-        val inserted = InsertClipCommand(TRACK, clip("c1", duration = 10L)).apply(emptySequence())
-        assertFailsWith<IllegalStateException> { TrimStartCommand(TRACK, ClipId("c1"), -1L).apply(inserted) }
-        assertFailsWith<IllegalStateException> { TrimEndCommand(TRACK, ClipId("c1"), 11L).apply(inserted) }
-        assertFailsWith<IllegalStateException> { TrimEndCommand(TRACK, ClipId("c1"), 0L).apply(inserted) }
+    fun `trims into an empty or negative clip are rejected`() {
+        val inserted = InsertClipCommand(TRACK, clip("c1", sourceStart = 100L, duration = 10L)).apply(emptySequence())
+        assertFailsWith<IllegalArgumentException> { TrimStartCommand(TRACK, ClipId("c1"), 110L).apply(inserted) } // empty
+        assertFailsWith<IllegalArgumentException> { TrimStartCommand(TRACK, ClipId("c1"), 120L).apply(inserted) } // negative
+        assertFailsWith<IllegalArgumentException> { TrimEndCommand(TRACK, ClipId("c1"), 100L).apply(inserted) } // empty
+        assertFailsWith<IllegalArgumentException> { TrimEndCommand(TRACK, ClipId("c1"), 50L).apply(inserted) } // negative
+        assertFailsWith<IllegalArgumentException> { TrimStartCommand(TRACK, ClipId("c1"), -5L).apply(inserted) } // start < 0
+    }
+
+    @Test
+    fun `trim can be extended back to the original range (undo path)`() {
+        val original = clip("c1", sourceStart = 100L, duration = 10L)
+        val inserted = InsertClipCommand(TRACK, original).apply(emptySequence())
+        val trimmed = TrimStartCommand(TRACK, ClipId("c1"), 103L).apply(inserted)
+        assertEquals(3L, trimmed.singleTrack().clip(ClipId("c1"))?.timelineIn)
+
+        val extended = TrimStartCommand(TRACK, ClipId("c1"), 100L).apply(trimmed)
+        assertEquals(inserted, extended)
     }
 
     @Test

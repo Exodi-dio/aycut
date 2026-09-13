@@ -46,8 +46,12 @@ class RemoveClipCommand(
 }
 
 /**
- * Trim the start of a clip: the timeline end stays fixed and the cut is taken
- * from the beginning of the source media.
+ * Trim the start of a clip: the timeline end stays fixed and the cut is
+ * taken from the beginning of the source media.
+ *
+ * The engine only rejects empty or negative results; "may not extend beyond
+ * the current media" is a UI/motion policy enforced later by the media
+ * registry, so undo can freely restore the pre-trim range.
  */
 class TrimStartCommand(
     private val trackId: TrackId,
@@ -60,8 +64,6 @@ class TrimStartCommand(
     override fun apply(sequence: Sequence): Sequence {
         val track = sequence.trackOrThrow(trackId)
         val clip = track.clip(clipId) ?: error("clip ${clipId.raw} not on track")
-        check(newSourceStart >= clip.sourceRange.start) { "trim must not extend the clip" }
-        check(newSourceStart < clip.sourceRange.end) { "trim would leave an empty clip" }
         original = clip
 
         val remaining = clip.sourceRange.end - newSourceStart
@@ -91,8 +93,6 @@ class TrimEndCommand(
     override fun apply(sequence: Sequence): Sequence {
         val track = sequence.trackOrThrow(trackId)
         val clip = track.clip(clipId) ?: error("clip ${clipId.raw} not on track")
-        check(newSourceEnd <= clip.sourceRange.end) { "trim must not extend the clip" }
-        check(newSourceEnd > clip.sourceRange.start) { "trim would leave an empty clip" }
         original = clip
 
         val replacement = clip.copy(
@@ -188,7 +188,7 @@ class MoveClipCommand(
     override fun apply(sequence: Sequence): Sequence {
         val track = sequence.trackOrThrow(trackId)
         val clip = track.clip(clipId) ?: error("clip ${clipId.raw} not on track")
-        check(newTimelineIn >= 0L) { "timelineIn must be non-negative" }
+        require(newTimelineIn >= 0L) { "timelineIn must be non-negative" }
         original = clip
         return sequence.withTrack(track.replaceClip(clipId, clip.copy(timelineIn = newTimelineIn)))
     }

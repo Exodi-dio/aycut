@@ -38,6 +38,6 @@ class TimeRangeTest {
         assertTrue(a.overlaps(TimeRange(5L, 5L)))
         assertTrue(a.overlaps(TimeRange(9L, 5L)))
         assertFalse(a.overlaps(TimeRange(10L, 5L))) // touching at end only
-        assertFalse(a.overlaps(TimeRange(-10_000L, 10L)))
+        assertFalse(a.overlaps(TimeRange(20L, 5L))) // clearly disjoint
     }
 }
