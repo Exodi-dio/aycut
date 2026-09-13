@@ -16,7 +16,7 @@ data class Sequence(
     val width: Int,
     val height: Int,
     val frameRate: Double,
-    val tracks: List<Track>,
+    val tracks: List<Track> = emptyList(),
 ) {
     init {
         require(width > 0) { "width must be positive" }
