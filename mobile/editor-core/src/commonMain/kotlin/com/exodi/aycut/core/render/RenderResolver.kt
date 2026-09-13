@@ -113,7 +113,7 @@ class RenderResolver(
         val index = track.indexOfClip(clip.id)
         val previous = if (index > 0) track.clips[index - 1] else null
         if (previous == null) return
-        val back = progress * durationMicros
+        val back = (progress * durationMicros).toLong()
         val previousTime = (clip.timelineIn - durationMicros + back)
             .coerceIn(previous.timelineIn, previous.timelineEnd - 1L)
         if (previous.timelineRange.contains(previousTime)) {
