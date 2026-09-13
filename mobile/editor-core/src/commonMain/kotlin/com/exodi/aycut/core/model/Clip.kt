@@ -1,5 +1,8 @@
 package com.exodi.aycut.core.model
 
+import com.exodi.aycut.core.effect.ClipTransition
+import com.exodi.aycut.core.effect.Effect
+import com.exodi.aycut.core.effect.EffectId
 import com.exodi.aycut.core.math.SourceProjection
 
 /** Opaque identity of a source media asset (the imported file). */
@@ -23,6 +26,9 @@ value class ClipId(val raw: String)
  * static linear level, [audioEnvelope] a keyframed automation that takes
  * precedence over [gain] when present, and [fadeIn]/[fadeOut] are linear
  * attenuation ramps measured from the clip's in/out point in microseconds.
+ *
+ * [effects] are the applied picture effects (opacity, transform, ...) and
+ * [transitionIn] is the visual transition at the clip's head.
  */
 data class Clip(
     val id: ClipId,
@@ -35,6 +41,8 @@ data class Clip(
     val fadeIn: Micros = 0L,
     val fadeOut: Micros = 0L,
     val audioEnvelope: AudioEnvelope? = null,
+    val effects: List<Effect> = emptyList(),
+    val transitionIn: ClipTransition? = null,
 ) {
     init {
         require(playRate.isFinite() && playRate > 0.0) {
@@ -46,6 +54,9 @@ data class Clip(
         require(fadeIn >= 0L) { "fadeIn must be non-negative, was $fadeIn" }
         require(fadeOut >= 0L) { "fadeOut must be non-negative, was $fadeOut" }
     }
+
+    /** The first applied effect with [effectId], or null. */
+    fun effect(effectId: EffectId): Effect? = effects.firstOrNull { it.id == effectId }
 
     /** Length of this clip on the timeline: source span divided by speed. */
     val timelineDuration: Micros

@@ -4,13 +4,15 @@ import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.view.Surface
-import com.exodi.aycut.core.composite.CompositorGraph
 import com.exodi.aycut.core.composite.LayerSpec
 import com.exodi.aycut.core.media.MediaAssetRegistry
 import com.exodi.aycut.core.model.MediaId
 import com.exodi.aycut.core.model.Sequence
+import com.exodi.aycut.core.render.RenderLayer
+import com.exodi.aycut.core.render.RenderResolver
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
 
 /**
  * Drives the compositor + decoders for one video preview surface.
@@ -29,7 +31,7 @@ class PreviewSession(
     private var registry: MediaAssetRegistry = MediaAssetRegistry.EMPTY
 
     private val renderer = com.exodi.aycut.gl.PreviewRenderer()
-    private val graph get() = CompositorGraph(sequence, registry)
+    private val composite get() = RenderResolver(sequence, registry)
     private val decoders = mutableMapOf<MediaId, ActiveDecoder>()
     private val seekRequested = AtomicBoolean(false)
 
@@ -105,7 +107,8 @@ class PreviewSession(
             restartDecoders(micros)
         }
 
-        val layers = graph.layers(micros)
+        val frame = composite.resolve(micros)
+        val layers = frame.videoLayers.map { it.toLayerSpec() }
         ensureDecodersFor(layers)
 
         renderer.clearCanvas()
@@ -150,7 +153,7 @@ class PreviewSession(
     }
 
     private fun restartDecoders(micros: Long) {
-        for (layer in graph.layers(micros)) {
+        for (layer in composite.resolve(micros).videoLayers) {
             val window = sourceWindow(layer.mediaId, micros) ?: continue
             val active = decoders[layer.mediaId] ?: continue
             active.start(window.first, window.second)
@@ -166,6 +169,15 @@ class PreviewSession(
         }
         return null
     }
+
+    /** Maps a resolved layer onto the GLES [LayerSpec] consumed downstream. */
+    private fun RenderLayer.toLayerSpec() = LayerSpec(
+        mediaId = mediaId,
+        rotationDegrees = rotationDegrees.roundToInt(),
+        uvWindow = uvWindow,
+        outputRect = outputRect,
+        opacity = opacity,
+    )
 
     /** One decoded clip: codec + its external texture + frame pacing state. */
     private class ActiveDecoder(
