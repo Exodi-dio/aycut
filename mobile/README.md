@@ -66,7 +66,7 @@ Conventional Commits. All commits co-authored with the project owner identity.
 
 - [x] M1 skeleton + CI
 - [x] M2 timeline model (clips, tracks, time mapping, undo)
-- [ ] M3 project persistence (Room + portable snapshot)
+- [x] M3 project persistence (portable JSON snapshot + app-private file store)
 - [ ] M4 media I/O (import, decode, thumbnails)
 - [ ] M5 GLES compositor + preview
 - [ ] M6 timeline UI (Compose)
