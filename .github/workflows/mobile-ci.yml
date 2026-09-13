@@ -1,0 +1,69 @@
+name: Mobile CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mobile:
+    name: Test and Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Android SDK
+        working-directory: mobile
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Test editor core
+        working-directory: mobile
+        run: ./gradlew :editor-core:testAndroidHostTest
+
+      - name: Test Android host unit tests
+        working-directory: mobile
+        run: ./gradlew :androidApp:testDevDebugUnitTest
+
+      - name: Build Android app
+        working-directory: mobile
+        run: ./gradlew :androidApp:assembleDevDebug
+
+      - name: Upload Android APK
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: aycut-dev-debug
+          path: mobile/androidApp/build/outputs/apk/dev/debug/*.apk
+          if-no-files-found: error

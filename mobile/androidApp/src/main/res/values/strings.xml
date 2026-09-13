@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">aycut</string>
+    <string name="phase_one_skeleton">Phase 1 skeleton — %1$dx%2$d sequence engine boots.</string>
+</resources>

@@ -1,0 +1,11 @@
+# Local tooling state — never commit
+.local
+local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
