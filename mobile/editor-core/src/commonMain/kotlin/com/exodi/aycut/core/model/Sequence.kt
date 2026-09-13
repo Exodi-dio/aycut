@@ -5,23 +5,30 @@ import com.exodi.aycut.core.math.FrameRounding
 import com.exodi.aycut.core.math.Frames
 
 /**
- * A video editing sequence: canvas size, frame rate, and a set of tracks.
+ * A video editing sequence: canvas size, frame rate, tracks, and master audio
+ * level.
  *
  * All timeline timing is integer microseconds (see [Micros]). [frameRate] is
  * the approximate decimal; [timebase] is the exact rational the engine counts
  * frames on, derived from [frameRate]. Time mapping never rounds to frames
- * unless explicitly requested (e.g. [frameAt]).
+ * unless explicitly requested (e.g. [frameAt]). [masterGain] scales the
+ * summed audio bus (see [com.exodi.aycut.core.audio.AudioMixer]); 1.0 is
+ * unity.
  */
 data class Sequence(
     val width: Int,
     val height: Int,
     val frameRate: Double,
     val tracks: List<Track> = emptyList(),
+    val masterGain: Double = 1.0,
 ) {
     init {
         require(width > 0) { "width must be positive" }
         require(height > 0) { "height must be positive" }
         require(frameRate > 0.0) { "frameRate must be positive" }
+        require(masterGain.isFinite() && masterGain >= 0.0) {
+            "masterGain must be finite and non-negative, was $masterGain"
+        }
         require(tracks.map { it.id }.distinct().size == tracks.size) {
             "duplicate track ids"
         }
@@ -62,6 +69,7 @@ data class Sequence(
             height: Int = 1080,
             frameRate: Double = 30.0,
             tracks: List<Track> = emptyList(),
-        ): Sequence = Sequence(width, height, frameRate, tracks)
+            masterGain: Double = 1.0,
+        ): Sequence = Sequence(width, height, frameRate, tracks, masterGain)
     }
 }

@@ -77,4 +77,37 @@ class TrackTest {
             .plusClip(clip("b", 40L, 5L))
         assertEquals(45L, track.duration)
     }
+
+    @Test
+    fun `lane type defaults to video`() {
+        assertEquals(TrackType.VIDEO, Track.empty(TrackId("v1")).type)
+        assertEquals(TrackType.VIDEO, Track(TrackId("v1"), emptyList()).type)
+    }
+
+    @Test
+    fun `lane type is preserved through insert, remove and replace`() {
+        val clipA = clip("a", 0L, 10L)
+        val clipB = clip("b", 20L, 5L)
+        var track = Track.empty(TrackId("a1"), TrackType.AUDIO)
+        track = track.plusClip(clipB)
+        track = track.plusClip(clipA)
+        assertEquals(TrackType.AUDIO, track.type)
+        assertEquals(TrackType.AUDIO, track.replaceClip(ClipId("a"), clipA).type)
+        assertEquals(TrackType.AUDIO, track.removeClip(ClipId("a")).type)
+    }
+
+    @Test
+    fun `withType copies the lane under a new kind`() {
+        val track = Track.empty(TrackId("t1"), TrackType.VIDEO)
+        assertEquals(TrackType.TITLE, track.withType(TrackType.TITLE).type)
+        assertEquals(TrackType.VIDEO, track.type)
+    }
+
+    @Test
+    fun `audio lanes answer clipAt like any lane`() {
+        val track = Track.empty(TrackId("a1"), TrackType.AUDIO)
+            .plusClip(clip("a", 0L, 10L))
+        assertEquals("a", track.clipAt(5L)?.id?.raw)
+        assertNull(track.clipAt(11L)?.id?.raw)
+    }
 }

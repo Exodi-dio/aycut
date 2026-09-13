@@ -3,6 +3,7 @@ package com.exodi.aycut.core.model
 import com.exodi.aycut.core.math.FrameRate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class SequenceTest {
@@ -67,5 +68,24 @@ class SequenceTest {
         val appended = sequence.withTrack(Track.empty(v2))
         assertEquals(2, appended.tracks.size)
         assertEquals(listOf(v1, v2), appended.tracks.map { it.id })
+    }
+
+    @Test
+    fun `master gain defaults to unity`() {
+        assertEquals(1.0, Sequence.createEmpty().masterGain)
+        assertEquals(1.0, Sequence(1920, 1080, 30.0).masterGain)
+    }
+
+    @Test
+    fun `createEmpty accepts a master gain`() {
+        assertEquals(0.5, Sequence.createEmpty(masterGain = 0.5).masterGain)
+    }
+
+    @Test
+    fun `master gain is validated`() {
+        assertFailsWith<IllegalArgumentException> { Sequence.createEmpty(masterGain = -1.0) }
+        assertFailsWith<IllegalArgumentException> {
+            Sequence.createEmpty(masterGain = Double.NaN)
+        }
     }
 }
