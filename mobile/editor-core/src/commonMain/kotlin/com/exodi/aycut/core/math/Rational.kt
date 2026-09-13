@@ -1,5 +1,7 @@
 package com.exodi.aycut.core.math
 
+import kotlin.math.abs
+
 /** A number expressed as an exact fraction `numerator / denominator`. */
 data class Rational(
     val numerator: Long,
