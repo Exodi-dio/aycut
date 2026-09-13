@@ -195,7 +195,7 @@ class ClipCommandsTest {
         assertEquals(2L, right.timelineIn)
         assertEquals(5L, right.timelineEnd)
 
-        assertEquals(inserted, split.invert().apply(split))
+        assertEquals(inserted, SplitClipCommand(TRACK, ClipId("c1"), at = 2L).invert().apply(split))
     }
 
     @Test
@@ -217,7 +217,7 @@ class ClipCommandsTest {
         assertEquals(4L, right.timelineIn)
         assertEquals(10L, right.timelineEnd)
 
-        assertEquals(inserted, split.invert().apply(split))
+        assertEquals(inserted, SplitClipCommand(TRACK, ClipId("c1"), at = 4L).invert().apply(split))
     }
 
     @Test
