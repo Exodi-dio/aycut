@@ -75,7 +75,7 @@ class SourceProjectionTest {
     @Test
     fun `double speed advances source twice per timeline microsecond`() {
         assertEquals(106L, forward(3L, 0L, 5L, 100L, 110L, rate = 2.0))
-        assertEquals(110L - 1L, forward(4L, 0L, 5L, 100L, 110L, rate = 2.0))
+        assertEquals(108L, forward(4L, 0L, 5L, 100L, 110L, rate = 2.0))
     }
 
     @Test

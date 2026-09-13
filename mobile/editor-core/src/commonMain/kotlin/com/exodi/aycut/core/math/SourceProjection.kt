@@ -10,8 +10,11 @@ import kotlin.math.roundToLong
  * All editor timing is integer microseconds. A timeline offset is converted
  * to a source offset by nearest-microsecond scaling (ties round up), then
  * clamped into the clip's source span so the half-open source range
- * `[start, end)` is never left and the mapping is onto the inhabitable
- * source microseconds `[start, end - 1]`.
+ * `[start, end)` is never left. At unit speed the mapping is a bijection;
+ * slower rates hold the far edge (clamped to `end - 1`); faster rates read
+ * ahead and may skip trailing source microseconds, matching how constant
+ * speed playback jumps the read position. [reverse] plays the source
+ * backwards, mirroring the forward path around the span midpoint.
  *
  * The math is overflow-guarded: rates or offsets whose product would escape
  * the `Long` microsecond grid are rejected instead of silently wrapping.

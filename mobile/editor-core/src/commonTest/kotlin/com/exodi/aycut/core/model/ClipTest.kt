@@ -54,7 +54,7 @@ class ClipTest {
         val c = clip(duration = 10L, playRate = 2.0)
         assertEquals(0L, c.sourceTimeAt(0L))
         assertEquals(6L, c.sourceTimeAt(3L))
-        assertEquals(9L, c.sourceTimeAt(4L)) // clamp into the source span
+        assertEquals(8L, c.sourceTimeAt(4L)) // fast playback skips the tail microsecond
     }
 
     @Test

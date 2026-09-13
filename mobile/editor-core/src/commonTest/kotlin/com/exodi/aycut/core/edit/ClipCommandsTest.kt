@@ -173,7 +173,9 @@ class ClipCommandsTest {
         assertEquals(1L, trimmedClip.timelineIn)
         assertEquals(5L, trimmedClip.timelineEnd) // end stayed fixed
         assertEquals(2.0, trimmedClip.playRate)
-        assertEquals(inserted, TrimStartCommand(TRACK, ClipId("c1"), 2L).invert().apply(trimmed))
+        val trim = TrimStartCommand(TRACK, ClipId("c1"), newSourceStart = 2L)
+        trim.apply(inserted)
+        assertEquals(inserted, trim.invert().apply(trimmed))
     }
 
     @Test
@@ -195,7 +197,9 @@ class ClipCommandsTest {
         assertEquals(2L, right.timelineIn)
         assertEquals(5L, right.timelineEnd)
 
-        assertEquals(inserted, SplitClipCommand(TRACK, ClipId("c1"), at = 2L).invert().apply(split))
+        val splitCommand = SplitClipCommand(TRACK, ClipId("c1"), at = 2L)
+        splitCommand.apply(inserted)
+        assertEquals(inserted, splitCommand.invert().apply(split))
     }
 
     @Test
@@ -217,7 +221,9 @@ class ClipCommandsTest {
         assertEquals(4L, right.timelineIn)
         assertEquals(10L, right.timelineEnd)
 
-        assertEquals(inserted, SplitClipCommand(TRACK, ClipId("c1"), at = 4L).invert().apply(split))
+        val splitCommand = SplitClipCommand(TRACK, ClipId("c1"), at = 4L)
+        splitCommand.apply(inserted)
+        assertEquals(inserted, splitCommand.invert().apply(split))
     }
 
     @Test
