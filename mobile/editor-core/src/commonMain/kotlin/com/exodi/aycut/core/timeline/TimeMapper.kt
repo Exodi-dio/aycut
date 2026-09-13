@@ -17,9 +17,11 @@ data class SourcePosition(
 /**
  * Maps timeline (playhead) time to source time per track.
  *
- * Because clips store their in/out trims as source + timeline ranges, the
- * mapping survives every edit: split, start/end trim, and move all keep
- * `sourceTime = source.start + (timelineTime - timelineIn)` exact. Gaps on a
+ * Clips store their in/out trims as source + timeline ranges and project
+ * through [com.exodi.aycut.core.math.SourceProjection], which keeps
+ * `sourceTime = source.start + (offset * playRate)` exact at unit speed and
+ * inverts the direction for reversed clips. The mapping survives every edit:
+ * split, start/end trim, and move all keep the projection exact. Gaps on a
  * track and unknown tracks map to nothing.
  */
 object TimeMapper {

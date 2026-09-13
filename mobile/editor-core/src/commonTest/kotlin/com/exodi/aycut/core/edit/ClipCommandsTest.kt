@@ -13,6 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 private val TRACK = TrackId("v1")
 
@@ -155,6 +156,78 @@ class ClipCommandsTest {
         }
         assertFailsWith<IllegalArgumentException> {
             MoveClipCommand(TRACK, ClipId("c2"), newTimelineIn = -1L).apply(inserted)
+        }
+    }
+
+    @Test
+    fun `trim start at double speed keeps the timeline end fixed`() {
+        val inserted = InsertClipCommand(
+            TRACK,
+            clip("c1", sourceStart = 0L, duration = 10L).copy(playRate = 2.0),
+        ).apply(emptySequence())
+        val trimmed = TrimStartCommand(TRACK, ClipId("c1"), newSourceStart = 2L).apply(inserted)
+
+        val trimmedClip = trimmed.singleTrack().clip(ClipId("c1"))!!
+        assertEquals(2L, trimmedClip.sourceRange.start)
+        assertEquals(8L, trimmedClip.sourceRange.durationMicros)
+        assertEquals(1L, trimmedClip.timelineIn)
+        assertEquals(5L, trimmedClip.timelineEnd) // end stayed fixed
+        assertEquals(2.0, trimmedClip.playRate)
+        assertEquals(inserted, TrimStartCommand(TRACK, ClipId("c1"), 2L).invert().apply(trimmed))
+    }
+
+    @Test
+    fun `split at double speed partitions source and preserves speed`() {
+        val inserted = InsertClipCommand(
+            TRACK,
+            clip("c1", sourceStart = 0L, duration = 10L).copy(playRate = 2.0),
+        ).apply(emptySequence())
+        val split = SplitClipCommand(TRACK, ClipId("c1"), at = 2L).apply(inserted)
+
+        val clips = split.singleTrack().clips
+        val left = clips[0]
+        val right = clips[1]
+        assertEquals(TimeRange(0L, 4L), left.sourceRange)
+        assertEquals(TimeRange(4L, 6L), right.sourceRange)
+        assertEquals(2.0, left.playRate)
+        assertEquals(2.0, right.playRate)
+        assertEquals(2L, left.timelineEnd)
+        assertEquals(2L, right.timelineIn)
+        assertEquals(5L, right.timelineEnd)
+
+        assertEquals(inserted, split.invert().apply(split))
+    }
+
+    @Test
+    fun `split reversed clip partitions source in reverse`() {
+        val inserted = InsertClipCommand(
+            TRACK,
+            clip("c1", sourceStart = 0L, duration = 10L).copy(reverse = true),
+        ).apply(emptySequence())
+        val split = SplitClipCommand(TRACK, ClipId("c1"), at = 4L).apply(inserted)
+
+        val clips = split.singleTrack().clips
+        val left = clips[0]
+        val right = clips[1]
+        assertEquals(TimeRange(6L, 4L), left.sourceRange)
+        assertEquals(TimeRange(0L, 6L), right.sourceRange)
+        assertTrue(left.reverse)
+        assertTrue(right.reverse)
+        assertEquals(4L, left.timelineEnd)
+        assertEquals(4L, right.timelineIn)
+        assertEquals(10L, right.timelineEnd)
+
+        assertEquals(inserted, split.invert().apply(split))
+    }
+
+    @Test
+    fun `split of a media too short to partition is rejected`() {
+        val inserted = InsertClipCommand(
+            TRACK,
+            clip("c1", sourceStart = 0L, duration = 1L).copy(playRate = 0.4),
+        ).apply(emptySequence())
+        assertFailsWith<IllegalArgumentException> {
+            SplitClipCommand(TRACK, ClipId("c1"), at = 1L).apply(inserted)
         }
     }
 }

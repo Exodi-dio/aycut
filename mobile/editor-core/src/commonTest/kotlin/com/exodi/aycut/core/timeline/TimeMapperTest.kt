@@ -117,4 +117,31 @@ class TimeMapperTest {
         assertEquals("c1#2", split.track(TRACK)?.clipAt(4L)?.id?.raw)
         assertEquals(4L, atBoundary?.sourceTime)
     }
+
+    @Test
+    fun `maps through a double speed clip`() {
+        val sequence = Sequence.createEmpty(
+            tracks = listOf(
+                Track.empty(TRACK).plusClip(
+                    Clip(CLIP, MEDIA, TimeRange(0L, 10L), 0L, playRate = 2.0),
+                ),
+            ),
+        )
+        assertEquals(SourcePosition(MEDIA, 4L), TimeMapper.sourcePositionAt(sequence, TRACK, 2L))
+        assertNull(TimeMapper.sourcePositionAt(sequence, TRACK, 5L)) // clip ends at 5us
+    }
+
+    @Test
+    fun `maps through a reversed clip`() {
+        val sequence = Sequence.createEmpty(
+            tracks = listOf(
+                Track.empty(TRACK).plusClip(
+                    Clip(CLIP, MEDIA, TimeRange(0L, 10L), 0L, reverse = true),
+                ),
+            ),
+        )
+        assertEquals(SourcePosition(MEDIA, 9L), TimeMapper.sourcePositionAt(sequence, TRACK, 0L))
+        assertEquals(SourcePosition(MEDIA, 5L), TimeMapper.sourcePositionAt(sequence, TRACK, 4L))
+        assertEquals(SourcePosition(MEDIA, 0L), TimeMapper.sourcePositionAt(sequence, TRACK, 9L))
+    }
 }

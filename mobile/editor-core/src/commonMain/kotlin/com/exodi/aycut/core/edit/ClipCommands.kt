@@ -1,5 +1,6 @@
 package com.exodi.aycut.core.edit
 
+import com.exodi.aycut.core.math.SourceProjection
 import com.exodi.aycut.core.model.Clip
 import com.exodi.aycut.core.model.ClipId
 import com.exodi.aycut.core.model.Micros
@@ -69,9 +70,11 @@ class TrimStartCommand(
         val remaining = clip.sourceRange.end - newSourceStart
         val replacement = clip.copy(
             sourceRange = TimeRange(newSourceStart, remaining),
-            timelineIn = clip.timelineEnd - remaining,
         )
-        return sequence.withTrack(track.replaceClip(clipId, replacement))
+        val timelineIn = clip.timelineEnd - replacement.timelineDuration
+        return sequence.withTrack(
+            track.replaceClip(clipId, replacement.copy(timelineIn = timelineIn)),
+        )
     }
 
     override fun invert(): EditCommand =
@@ -107,8 +110,14 @@ class TrimEndCommand(
 
 /**
  * Split a clip at a timeline time strictly inside it. The left half keeps the
- * parent id, the right half gets a derived id. Undo merges both halves back
- * into the exact original clip instance.
+ * parent id, the right half gets a derived id; both retain the clip's
+ * [playRate] and [reverse]. The halves partition the original source span
+ * contiguously (a reversed clip keeps the parent half at the tail of the
+ * source). Undo merges both halves back into the exact original clip
+ * instance.
+ *
+ * At fractional play rates the split boundary may shift by less than a
+ * microsecond so both halves stay source-contiguous.
  */
 class SplitClipCommand(
     private val trackId: TrackId,
@@ -127,16 +136,32 @@ class SplitClipCommand(
         }
         original = clip
 
-        val leftDuration = at - clip.timelineIn
+        val sourceSpan = clip.sourceRange.durationMicros
+        require(sourceSpan >= 2L) { "clip media is too short to split" }
+        val splitDelta = SourceProjection
+            .sourceSpanForTimeline(at - clip.timelineIn, clip.playRate)
+            .coerceIn(1L, sourceSpan - 1L)
         val rightId = rightId ?: ClipId("${clip.id.raw}#2")
         this.rightId = rightId
 
-        val left = clip.copy(sourceRange = TimeRange(clip.sourceRange.start, leftDuration))
-        val right = Clip(
+        val left = if (!clip.reverse) {
+            clip.copy(sourceRange = TimeRange(clip.sourceRange.start, splitDelta))
+        } else {
+            clip.copy(
+                sourceRange = TimeRange(
+                    clip.sourceRange.start + sourceSpan - splitDelta,
+                    splitDelta,
+                ),
+            )
+        }
+        val right = clip.copy(
             id = rightId,
-            media = clip.media,
-            sourceRange = TimeRange(clip.sourceRange.start + leftDuration, clip.sourceRange.durationMicros - leftDuration),
-            timelineIn = at,
+            sourceRange = if (!clip.reverse) {
+                TimeRange(clip.sourceRange.start + splitDelta, sourceSpan - splitDelta)
+            } else {
+                TimeRange(clip.sourceRange.start, sourceSpan - splitDelta)
+            },
+            timelineIn = left.timelineEnd,
         )
         return sequence.withTrack(track.replaceClip(clipId, left).plusClip(right))
     }
@@ -147,8 +172,8 @@ class SplitClipCommand(
 
 /**
  * Merge two adjacent halves of a clip back into [original], restoring the
- * original id and ranges. Requires the halves to be contiguous on the
- * timeline and contiguous in source.
+ * original id and ranges. Requires the halves to be adjacent on the timeline
+ * and to partition the original source span (in either playback direction).
  */
 class MergeClipsCommand(
     private val trackId: TrackId,
@@ -162,9 +187,13 @@ class MergeClipsCommand(
         val left = track.clip(original.id) ?: error("left half ${original.id.raw} missing")
         val right = track.clip(rightId) ?: error("right half ${rightId.raw} missing")
         check(right.timelineIn == left.timelineEnd) { "halves are not adjacent on the timeline" }
-        check(right.media == left.media && right.sourceRange.start == left.sourceRange.end) {
-            "halves are not contiguous in source"
+        check(right.media == left.media) { "halves use different media" }
+        val partitions = with(original.sourceRange) {
+            start == minOf(left.sourceRange.start, right.sourceRange.start) &&
+                end == maxOf(left.sourceRange.end, right.sourceRange.end) &&
+                durationMicros == left.sourceRange.durationMicros + right.sourceRange.durationMicros
         }
+        check(partitions) { "halves do not partition the original source span" }
         val merged = track.removeClip(rightId).replaceClip(left.id, original)
         return sequence.withTrack(merged)
     }
