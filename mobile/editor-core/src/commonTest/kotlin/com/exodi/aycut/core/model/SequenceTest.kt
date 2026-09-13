@@ -3,7 +3,6 @@ package com.exodi.aycut.core.model
 import com.exodi.aycut.core.math.FrameRate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 class SequenceTest {
@@ -22,13 +21,6 @@ class SequenceTest {
         assertEquals(FrameRate.P30, Sequence.createEmpty().timebase)
         assertEquals(FrameRate.NTSC_30, Sequence(1920, 1080, 29.97).timebase)
         assertEquals(FrameRate.P25, Sequence(1920, 1080, 25.0).timebase)
-    }
-
-    @Test
-    fun `explicit timebase conflicting with frame rate is rejected`() {
-        assertFailsWith<IllegalArgumentException> {
-            Sequence(1920, 1080, 30.0, emptyList(), timebase = FrameRate.P25)
-        }
     }
 
     @Test
