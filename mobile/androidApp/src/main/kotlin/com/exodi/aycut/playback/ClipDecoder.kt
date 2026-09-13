@@ -43,10 +43,11 @@ class ClipDecoder(
         eosQueued = false
         eosSeen = false
 
-        codec = MediaCodec.createDecoderByType(mime)
-        codec.configure(format, surface, null, 0)
+        val decoder = MediaCodec.createDecoderByType(mime)
+        codec = decoder
+        decoder.configure(format, surface, null, 0)
         extractor.seekTo(sourceStartUs, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
-        codec.start()
+        decoder.start()
     }
 
     /**

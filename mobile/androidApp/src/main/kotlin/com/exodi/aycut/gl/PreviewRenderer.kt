@@ -1,9 +1,9 @@
 package com.exodi.aycut.gl
 
+import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLES20.GL_COLOR_BUFFER_BIT
 import android.opengl.GLES20.GL_FLOAT
-import android.opengl.GLES20.GL_TEXTURE_EXTERNAL_OES
 import android.opengl.GLES20.GL_TRIANGLES
 import com.exodi.aycut.core.composite.LayerSpec
 import java.nio.ByteBuffer
@@ -70,7 +70,7 @@ class PreviewRenderer {
         GLES20.glVertexAttribPointer(uv, 2, GL_FLOAT, false, 16, buffer)
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GL_TEXTURE_EXTERNAL_OES, externalTextureId)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, externalTextureId)
         GLES20.glUniform1i(program.uniform("uTexture"), 0)
 
         val out = layer.outputRect
@@ -98,7 +98,7 @@ class PreviewRenderer {
 
         GLES20.glDisableVertexAttribArray(pos)
         GLES20.glDisableVertexAttribArray(uv)
-        GLES20.glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
     }
 
     fun onSurfaceDestroyed() {

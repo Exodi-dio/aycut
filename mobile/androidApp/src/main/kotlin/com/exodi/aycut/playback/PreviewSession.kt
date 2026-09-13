@@ -72,6 +72,10 @@ class PreviewSession(
     /** True once per caller between seeks; the preview view re-renders. */
     fun consumeSeekRequest(): Boolean = seekRequested.getAndSet(false)
 
+    private fun requestSeek() {
+        seekRequested.set(true)
+    }
+
     internal fun onGlCreated() {
         // A prior context's decoders/user objects are stale after surface
         // recreation; running here guarantees we are on the GL thread.
@@ -111,7 +115,7 @@ class PreviewSession(
                 if (window != null && !active.started) {
                     active.start(window.first, window.second)
                 }
-                if (active.isRunning) {
+                if (active.isRunning.get()) {
                     active.pulse()
                 }
                 if (active.frameAvailable.get()) {
