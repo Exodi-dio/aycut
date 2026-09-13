@@ -38,13 +38,18 @@ class TimecodeTest {
 
     @Test
     fun `drop frame skips two frames per minute except every ten`() {
+        // 00:00:59;29 is real frame 1799. The first emitted label of minute 1 is
+        // 00:01:00;02 (real frame 1800): labels :00 and :01 of minute 1 are
+        // dropped, so consecutive real frames jump the label by two.
         val beforeMinute =
             Timecode(0, 0, 59, 29, ntsc30, dropFrame = true).toMicros()
-        val minute =
-            Timecode(0, 1, 0, 0, ntsc30, dropFrame = true).toMicros()
+        val firstKept =
+            Timecode(0, 1, 0, 2, ntsc30, dropFrame = true).toMicros()
         assertEquals(60_027_233L, beforeMinute)
-        assertEquals(60_127_334L, minute)
-        assertEquals(3L, (minute - beforeMinute) / ntsc30.frameDurationMicros)
+        assertEquals(60_060_600L, firstKept)
+        assertEquals(1_799L, beforeMinute / ntsc30.frameDurationMicros)
+        assertEquals(1_800L, firstKept / ntsc30.frameDurationMicros)
+        assertEquals(1L, (firstKept - beforeMinute) / ntsc30.frameDurationMicros)
     }
 
     @Test
@@ -66,6 +71,10 @@ class TimecodeTest {
         val ten = Timecode(0, 10, 0, 0, ntsc30, dropFrame = true)
         assertEquals(600_005_394L, ten.toMicros())
         assertEquals(17_982L, ten.toMicros() / ntsc30.frameDurationMicros)
+        // Minute 10 is tenth: :00 and :01 are kept, so 00:10:00;01 is the next
+        // real frame after 00:10:00;00 (unlike minute 1, where :00/:01 vanish).
+        val after = Timecode(0, 10, 0, 1, ntsc30, dropFrame = true)
+        assertEquals(1L, (after.toMicros() - ten.toMicros()) / ntsc30.frameDurationMicros)
     }
 
     @Test
@@ -77,10 +86,12 @@ class TimecodeTest {
 
     @Test
     fun `drop frame labels round trip`() {
+        // 00:01:00;00 / 00:01:00;01 are dropped (never displayed), so they must
+        // NOT round trip; the first kept label of minute 1 is 00:01:00;02.
         for (label in listOf(
             Timecode(0, 0, 0, 0, ntsc30, dropFrame = true),
             Timecode(0, 0, 59, 29, ntsc30, dropFrame = true),
-            Timecode(0, 1, 0, 0, ntsc30, dropFrame = true),
+            Timecode(0, 1, 0, 2, ntsc30, dropFrame = true),
             Timecode(0, 9, 59, 29, ntsc30, dropFrame = true),
             Timecode(0, 10, 0, 0, ntsc30, dropFrame = true),
             Timecode(1, 0, 0, 0, ntsc30, dropFrame = true),

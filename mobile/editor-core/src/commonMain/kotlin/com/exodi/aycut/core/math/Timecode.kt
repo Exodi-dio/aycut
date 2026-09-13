@@ -13,7 +13,10 @@ import com.exodi.aycut.core.model.Micros
  *
  * Conversion to/from micros uses the exact frame grid: a timecode value maps
  * to the microsecond at the start of its frame, so round trips are stable to
- * at most half a [FrameRate.frameDurationMicros].
+ * at most half a [FrameRate.frameDurationMicros]. Dropped drop-frame labels
+ * (the first two frames of a non-tenth minute) are never produced by
+ * [fromMicros]; passing one to [toMicros] still resolves to its nominal count
+ * via the standard drop formula.
  */
 data class Timecode(
     val hours: Int,
