@@ -30,7 +30,6 @@ dependencies {
     implementation(project(":editor-core"))
 
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
 
