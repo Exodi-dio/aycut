@@ -46,17 +46,22 @@ class SpeedRamp(segments: List<RampSegment>) {
     fun projectedSourceOffset(offsetInClip: Micros): Micros {
         if (offsetInClip <= 0L) return 0L
         var source = 0.0
-        var cursor = 0L
-        for (segment in segments) {
+        for (i in segments.indices) {
+            val segment = segments[i]
             if (offsetInClip <= segment.offsetInClip) break
-            val dt = if (offsetInClip < segments.last().offsetInClip) {
-                segment.offsetInClip - cursor
-            } else {
-                offsetInClip - cursor
-            }
+            val nextOffset = if (i + 1 < segments.size) segments[i + 1].offsetInClip else offsetInClip
+            val windowEnd = offsetInClip.coerceAtMost(nextOffset)
+            val dt = windowEnd - segment.offsetInClip
             source += dt * segment.playRate
-            cursor += dt
+            if (offsetInClip <= nextOffset) break
         }
         return source.toLong()
     }
+
+    override fun equals(other: Any?): Boolean =
+        other is SpeedRamp && other.segments == segments
+
+    override fun hashCode(): Int = segments.hashCode()
+
+    override fun toString(): String = "SpeedRamp(segments=$segments)"
 }

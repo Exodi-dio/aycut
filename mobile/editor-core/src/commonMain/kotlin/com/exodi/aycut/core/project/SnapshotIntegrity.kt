@@ -65,7 +65,7 @@ object SnapshotIntegrity {
             }
             // Validate clip-ids are unique and sorted.
             for (track in trackList) {
-                require(track.clips.zipWithNext().all { a, b ->
+                require(track.clips.zipWithNext().all { (a, b) ->
                     a.timelineIn <= b.timelineIn && a.id != b.id
                 }) { "clips in track ${track.id} are not sorted/unique" }
             }

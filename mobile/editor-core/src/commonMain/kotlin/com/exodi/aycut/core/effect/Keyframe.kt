@@ -27,9 +27,7 @@ data class Keyframe(
  * interpolates linearly between neighbours ([lerp]); boolean values step at
  * the halfway point. A curve with a single keyframe is constant.
  */
-class ParamCurve(keyframes: List<Keyframe>) {
-
-    val keyframes: List<Keyframe> = keyframes
+data class ParamCurve(val keyframes: List<Keyframe>) {
 
     init {
         require(keyframes.isNotEmpty()) { "curve must contain at least one keyframe" }
