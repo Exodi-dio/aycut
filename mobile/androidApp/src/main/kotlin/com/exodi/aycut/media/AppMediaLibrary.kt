@@ -18,12 +18,14 @@ import java.util.UUID
 class AppMediaLibrary(
     appContext: Context,
     private val mediaDir: File,
-    @Volatile private var mode: RetrieverMode = RetrieverMode.FILE,
 ) {
 
     enum class RetrieverMode {
         FILE, URI,
     }
+
+    @Volatile
+    private var mode: RetrieverMode = RetrieverMode.FILE
 
     fun importFromUri(uri: Uri): MediaAsset {
         // Source filename first (for display + a stable-ish local name).
