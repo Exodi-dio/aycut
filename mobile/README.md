@@ -36,8 +36,14 @@ of code must stay compatible with that.
 
 ## Current status
 
-- M1 skeleton: repo builds on GitHub Actions (`mobile-ci.yml`), editor-core
-  shared module + androidApp shell, package `com.exodi.aycut`.
+- E1–E12 engine complete: timeline model, time mapping, editing ops, effects,
+  keyframes, transitions, RenderResolver, bounded undo, snapshot migration,
+  integrity checks, proxy/cache/conform planning, color math, compositing,
+  markers, links, captions, ducking, loudness, editor API, insert ops, and
+  portable project codec (v2).
+- M1–M5 shell skeleton: Compose preview, GLES compositor, MediaCodec decode,
+  project storage, media import + thumbnails.
+- M6–M8 pending: Compose timeline UI, H.264/AAC export, polish.
 
 ## Architecture
 
