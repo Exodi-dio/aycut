@@ -101,7 +101,13 @@ class AudioMixerTest {
         )
         assertEquals(0.0, AudioMixer.mixGain(sequence, 0L), 1e-12)
         assertEquals(0.5, AudioMixer.mixGain(sequence, 500_000L), 1e-12)
-        assertEquals(1.0, AudioMixer.mixGain(sequence, 999_999L), 1e-12)
+        assertEquals(0.999_999, AudioMixer.mixGain(sequence, 999_999L), 1e-12)
+
+        val shorter = Sequence.createEmpty(
+            tracks = listOf(audioTrack("a1", clip("c1", 0L, 1_000_000L, fadeIn = 500_000L))),
+        )
+        assertEquals(1.0, AudioMixer.mixGain(shorter, 500_000L), 1e-12)
+        assertEquals(1.0, AudioMixer.mixGain(shorter, 999_999L), 1e-12)
     }
 
     @Test
@@ -116,7 +122,7 @@ class AudioMixerTest {
     @Test
     fun `envelope automation overrides the static gain`() {
         val envelope = AudioEnvelope(
-            listOf(EnvelopePoint(0L, 0.0), EnvelopePoint(1_000_000L, 1.0)),
+            listOf(EnvelopePoint(0L, 0.0), EnvelopePoint(500_000L, 1.0)),
         )
         val sequence = Sequence.createEmpty(
             tracks = listOf(
@@ -124,7 +130,7 @@ class AudioMixerTest {
             ),
         )
         assertEquals(0.0, AudioMixer.mixGain(sequence, 0L), 1e-12)
-        assertEquals(0.5, AudioMixer.mixGain(sequence, 500_000L), 1e-12)
+        assertEquals(0.5, AudioMixer.mixGain(sequence, 250_000L), 1e-12)
         assertEquals(1.0, AudioMixer.mixGain(sequence, 999_999L), 1e-12)
     }
 
