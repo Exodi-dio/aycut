@@ -34,7 +34,7 @@ private const val V1_GOLDEN = """
 private const val V1_EFFECTLESS_CLIP = """
     {"version":1,"name":"Leaf","width":1920,"height":1080,"frameRate":30.0,
      "tracks":[{"id":"v1","clips":[
-       {"id":"c1","media":"a.mp4","sourceStart":0,"sourceDuration":8_000_000,"timelineIn":1_000_000}]}]}
+       {"id":"c1","media":"a.mp4","sourceStart":0,"sourceDuration":8000000,"timelineIn":1000000}]}]}
 """
 
 class ProjectMigrationTest {

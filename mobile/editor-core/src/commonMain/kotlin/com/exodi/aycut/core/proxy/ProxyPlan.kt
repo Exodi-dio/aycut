@@ -22,7 +22,6 @@ object ProxyPlanner {
         scale: Int = 4,
     ): List<ProxyEntry> {
         if (clips.isEmpty()) return emptyList()
-        val costPerByte = 0.00001   // rough placeholder budget weight
         val entries = clips.mapNotNull { (id, w, h) ->
             val dur = durations[id] ?: return@mapNotNull null
             val sw = (w / scale).coerceAtLeast(1)
@@ -33,10 +32,10 @@ object ProxyPlanner {
         var budget = availableBytes
         // Highest-duration clips first so they benefit most from reduced resolution.
         for (entry in entries.sortedByDescending { it.estimatedDuration }) {
-            val cost = entry.width.toLong() * entry.height.toLong() * entry.estimatedDuration * costPerByte
+            val cost = entry.width.toLong() * entry.height.toLong() * entry.estimatedDuration / 100_000L
             if (cost <= budget) {
                 result += entry
-                budget -= cost.toLong()
+                budget -= cost
             }
         }
         return result

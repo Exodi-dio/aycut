@@ -72,6 +72,8 @@ object SnapshotIntegrity {
             IntegrityCheck.Pass(trackList)
         } catch (e: IllegalArgumentException) {
             IntegrityCheck.Fail(e.message ?: "invalid track/clip data")
+        } catch (e: IllegalStateException) {
+            IntegrityCheck.Fail(e.message ?: "invalid track/clip data")
         }
         return SnapshotIntegrityReport(version, width, height, frameRate, tracks)
     }

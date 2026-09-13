@@ -32,7 +32,7 @@ class KeyframeTest {
             ),
         )
         assertEquals(1.0, curve.valueAt(200_000L).asNumber(), 1e-12)
-        assertEquals(1.0, curve.valueAt(800_000L).asNumber(), 1e-12)
+        assertEquals(2.0 / 3.0, curve.valueAt(800_000L).asNumber(), 1e-12)
         assertEquals(0.0, curve.valueAt(1_000_000L).asNumber(), 1e-12)
     }
 

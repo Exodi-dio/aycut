@@ -21,6 +21,9 @@ class SnapshotIntegrityTest {
     private fun minimalSequence(width: Int = 100, height: Int = 100, frameRate: Double = 30.0): Sequence =
         Sequence.createEmpty(width = width, height = height, frameRate = frameRate)
 
+    private fun rawSnapshot(width: Int = 100, height: Int = 100, frameRate: Double = 30.0): ProjectSnapshot =
+        ProjectSnapshot(name = "Raw", width = width, height = height, frameRate = frameRate)
+
     @Test
     fun `valid v2 snapshot is clean and tracks pass`() {
         val sequence = Sequence.createEmpty(
@@ -41,21 +44,21 @@ class SnapshotIntegrityTest {
 
     @Test
     fun `zero width fails integrity`() {
-        val report = SnapshotIntegrity.validate(snapshotOf(minimalSequence(width = 0)))
+        val report = SnapshotIntegrity.validate(rawSnapshot(width = 0))
         assertFalse(report.isClean)
         assertEquals("width must be positive", (report.width as IntegrityCheck.Fail).message)
     }
 
     @Test
     fun `zero height fails integrity`() {
-        val report = SnapshotIntegrity.validate(snapshotOf(minimalSequence(height = 0)))
+        val report = SnapshotIntegrity.validate(rawSnapshot(height = 0))
         assertFalse(report.isClean)
         assertEquals("height must be positive", (report.height as IntegrityCheck.Fail).message)
     }
 
     @Test
     fun `zero frameRate fails integrity`() {
-        val report = SnapshotIntegrity.validate(snapshotOf(minimalSequence(frameRate = 0.0)))
+        val report = SnapshotIntegrity.validate(rawSnapshot(frameRate = 0.0))
         assertFalse(report.isClean)
         assertEquals("frameRate must be positive", (report.frameRate as IntegrityCheck.Fail).message)
     }
