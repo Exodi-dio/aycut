@@ -64,7 +64,7 @@ Phones are weaker but the power problem is I/O and pixels, not logic. We use
 
 ## Milestone map
 
-Progress: **E1 ✅** (timebase kernel) · **E2 ✅** (source projection) · E3–E12 pending · M6–M8 pending.
+Progress: **E1 ✅** (timebase kernel) · **E2 ✅** (source projection) · **E3 ✅** (track types + audio envelope) · E4–E12 pending · M6–M8 pending.
 
 Engine stack (in `editor-core`, test-first):
 - E1 timebase kernel · E2 source projection · E3 track/audio · E4 effects +
