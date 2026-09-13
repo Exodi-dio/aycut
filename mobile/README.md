@@ -68,7 +68,7 @@ Conventional Commits. All commits co-authored with the project owner identity.
 - [x] M2 timeline model (clips, tracks, time mapping, undo)
 - [x] M3 project persistence (portable JSON snapshot + app-private file store)
 - [x] M4 media I/O (import, metadata, thumbnails)
-- [ ] M5 GLES compositor + preview
+- [x] M5 GLES compositor + preview
 - [ ] M6 timeline UI (Compose)
 - [ ] M7 export (H.264/AAC MP4)
 - [ ] M8 polish + release
