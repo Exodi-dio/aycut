@@ -46,7 +46,8 @@ object ProjectCodec {
         }
         return try {
             snapshot.toSequence()
-        } catch (e: IllegalArgumentException) {
+        } catch (e: RuntimeException) {
+            // Structural validation rejects via require (IAE) and check (ISE).
             throw ProjectFormatException("structurally invalid snapshot", e)
         }
     }
