@@ -16,7 +16,7 @@ import java.util.UUID
  * producing thumbnail frames. All Android-breaking APIs are confined here.
  */
 class AppMediaLibrary(
-    context: Context,
+    appContext: Context,
     private val mediaDir: File,
     @Volatile private var mode: RetrieverMode = RetrieverMode.FILE,
 ) {
@@ -33,7 +33,7 @@ class AppMediaLibrary(
 
         // SAF gives a streaming read; copy the bytes so decode/thumbnail
         // never depends on the picker's URI outliving the session.
-        context.contentResolver.openInputStream(uri).use { input ->
+        appContext.contentResolver.openInputStream(uri).use { input ->
             checkNotNull(input) { "cannot open $uri" }
             file.outputStream().use { output -> input.copyTo(output) }
         }
@@ -42,12 +42,12 @@ class AppMediaLibrary(
         try {
             when (mode) {
                 RetrieverMode.FILE -> retriever.setDataSource(file.absolutePath)
-                RetrieverMode.URI -> retriever.setDataSource(context, uri)
+                RetrieverMode.URI -> retriever.setDataSource(appContext, uri)
             }
             return MediaAsset(
                 id = id,
                 displayName = sourceName,
-                mimeType = context.contentResolver.getType(uri),
+                mimeType = appContext.contentResolver.getType(uri),
                 durationMicros = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_DURATION),
                 width = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH).toInt(),
                 height = retriever.metadataLong(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT).toInt(),
@@ -67,7 +67,7 @@ class AppMediaLibrary(
                     val file = File(mediaDir, fileFor(asset))
                     retriever.setDataSource(file.absolutePath)
                 }
-                RetrieverMode.URI -> retriever.setDataSource(context, assetUri(asset))
+                RetrieverMode.URI -> retriever.setDataSource(appContext, assetUri(asset))
             }
             retriever.getFrameAtTime(atMicros, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
         } finally {
@@ -79,7 +79,7 @@ class AppMediaLibrary(
         extractMetadata(key)?.toLongOrNull() ?: 0L
 
     private fun queryDisplayName(uri: Uri): String? {
-        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null).use { cursor ->
+        appContext.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null).use { cursor ->
             if (cursor != null && cursor.moveToFirst()) {
                 val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (idx >= 0) {
